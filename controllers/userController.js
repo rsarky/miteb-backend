@@ -1,15 +1,4 @@
-const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const moment = require('moment');
-const express = require('express');
-const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer')
-const AWS = require('aws-sdk')
-const fs = require('fs')
-var cors = require('cors')
-var pdf = require('html-pdf');
-var ejs = require('ejs');
-const smtpTransport = require('nodemailer-smtp-transport')
 
 exports.signup = function(req, res) {
   var newUser = req.body;

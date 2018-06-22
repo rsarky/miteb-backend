@@ -11,8 +11,7 @@ const SO_NAME = "Ashok Rao"
 var config = require('../config/config.js');
 
 exports.generate_pdf = function(req,res) {
-  // var eventID = req.query.eventID;
-  var eventID = '-LF321NT7IQ1vprnGycZ';
+  var eventID = req.query.eventID;
   var filename = `${eventID}.pdf`
 
   var eventref = admin.database().ref('events/' + eventID);
@@ -107,5 +106,5 @@ exports.generate_pdf = function(req,res) {
 };
 
 exports.basic = function(req, res, next) {
-      res.status(200).send("Hello World!");
+  res.status(200).send("Hello World!");
 };
