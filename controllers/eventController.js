@@ -36,7 +36,7 @@ exports.generate_pdf = function(req,res) {
       notes = snapshot.val().notes;
       visibility = "visible";
     }
-    ejs.renderFile('./eventpdf.ejs', {
+    ejs.renderFile('./../eventpdf.ejs', {
       club_name: snapshot.val().clubName,
       booker_name: snapshot.val().booker_name,
       booker_contact: snapshot.val().booker_contact,
