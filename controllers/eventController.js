@@ -1,9 +1,14 @@
 const admin = require('firebase-admin');
+var serviceAccount = require("./../config.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://mit-clubs-management.firebaseio.com"
+});
+
 var ejs = require('ejs');
 var pdf = require('html-pdf');
 const moment = require('moment');
 const fs = require('fs')
-const AWS = require('aws-sdk')
 
 const AD_NAME = "Naranaya Shenoy"
 const SO_NAME = "Ashok Rao"
@@ -36,7 +41,7 @@ exports.generate_pdf = function(req,res) {
       notes = snapshot.val().notes;
       visibility = "visible";
     }
-    ejs.renderFile('./../eventpdf.ejs', {
+    ejs.renderFile('eventpdf.ejs', {
       club_name: snapshot.val().clubName,
       booker_name: snapshot.val().booker_name,
       booker_contact: snapshot.val().booker_contact,
@@ -90,7 +95,7 @@ exports.generate_pdf = function(req,res) {
           res.status(200).send(downloadURL)
           fs.unlink(filename, (err) => {
             if (err) throw err;
-            console.log(filename +' was deleted');
+            console.log(filename +' was deleted from local server');
           });
           return
         }
@@ -103,8 +108,4 @@ exports.generate_pdf = function(req,res) {
      console.log("Error: " + error.code);
 });
   
-};
-
-exports.basic = function(req, res, next) {
-  res.status(200).send("Hello World!");
 };

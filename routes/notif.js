@@ -5,8 +5,8 @@ var notif_controller = require('../controllers/notifController');
 
 router.post('/sendOTP', notif_controller.send_otp);
 
-router.get('/send-email', notif_controller.send_email);
+router.post('/send-email', notif_controller.send_email);
 
-router.get('/send-notif', notif_controller.send_notif);
+router.post('/send-push', notif_controller.send_push);
 
 module.exports = router;

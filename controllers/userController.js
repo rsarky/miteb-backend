@@ -1,5 +1,4 @@
 const admin = require('firebase-admin');
-
 exports.signup = function(req, res) {
   var newUser = req.body;
   admin.auth().createUser({

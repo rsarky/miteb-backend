@@ -9,6 +9,11 @@ var cors = require('cors')
 var pdf = require('html-pdf');
 var ejs = require('ejs');
 const smtpTransport = require('nodemailer-smtp-transport')
+
+const sc_uid = "9xdTvUjqtuYI5yYOJ4BbhsPAIyx2";
+const ad_uid = "DAAhD2EBqvQujYGITPAdBfZtZEH3";
+const so_uid = "raMsWfP6m9dlNl6T6k7jTnfGlxG3";
+
 exports.send_otp = function(req,res) {
   // var userID = req.query.userID;
   var userID = 'asdas';
@@ -43,13 +48,11 @@ exports.send_otp = function(req,res) {
   });
 };
 
+
 exports.send_email = function(req, res) {
   var params = req.body;
   console.log(params);
   var transporter = nodemailer.createTransport(smtpTransport({
-    // host: 'smtp.gmail.com',
-    // port: 465,
-    // secure: true, // use SSL
     service: 'gmail',
     auth: {
         user: 'miteventbooking@gmail.com',
@@ -75,8 +78,7 @@ exports.send_email = function(req, res) {
   });
 };
 
-exports.send_notif = function(req, res, next) {
-  // var uid = String(req.body.uid);
+exports.send_push = function(req, res) {
   var uid;
   var notifResponse=[];
   var notifOptions = req.body.notificationOptions;

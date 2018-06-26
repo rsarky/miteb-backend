@@ -37,7 +37,7 @@ import urllib2
 
 
 params = urllib.urlencode(update_user_params)
-res = urllib2.urlopen('http://localhost:9000/')
+res = urllib2.urlopen('http://localhost:9000/event/generate-pdf?eventID=-LFJQMGt9h9jYaer4C3H')
 print res.read()
 
 # import json
