@@ -9,7 +9,8 @@ var ejs = require('ejs');
 var pdf = require('html-pdf');
 var Excel = require('exceljs');
 const moment = require('moment');
-const fs = require('fs')
+const fs = require('fs');
+const XLSX = require('xlsx');
 
 const AD_NAME = "Naranaya Shenoy"
 const SO_NAME = "Ashok Rao"
@@ -111,6 +112,19 @@ exports.generate_pdf = function(req,res) {
   
 };
 
+// exports.generate_sheet = function(req,res) {
+//   var wb = XLSX.utilis.book_new();
+//   wb.Props = {
+//     Title: "Test title",
+//     Author: "Priyam"
+//   };
+//   wb.SheetNames.push("Test Sheet");;
+//   var ws_data = [["Test", "Data"]];
+//   var ws = XLSX.utilis.aoa_to_sheet(ws_data);
+//   wb.Sheets["Test Sheet"] = ws;
+
+//   var wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'binary'});
+// }
 exports.generate_sheet = function(req, res) {
  try {
       function snapshotToArray(snapshot) {
@@ -173,7 +187,7 @@ exports.generate_sheet = function(req, res) {
         	//Writes the content on an excel sheet and downloads it
      		workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
             console.log('file is written');
-            res.sendFile(__dirname + '/eventDetails.xlsx', function(err, result){
+            res.download(__dirname + '/eventDetails.xlsx', function(err, result){
                 if(err){
                 	console.log('Error downloading file: ' + err);	
                 }
