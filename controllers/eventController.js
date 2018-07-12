@@ -139,64 +139,134 @@ exports.generate_sheet = function(req, res) {
 
     return returnArr;
     };
+        var montht = ['Jan','Feb','Mar','Apr','May','jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         var clubID = req.params.uid;
-        var d1 = req.params.date1;
-        var d2 = req.params.date2; 
         var sdate;
         var edate;
         var club;
         var desc;
         var workbook = new Excel.Workbook();
-        var worksheet = workbook.addWorksheet('Event Details');
+        workbook.views = [
+  {
+    x: 0, y: 0, width: 10000, height: 20000,
+    firstSheet: 0, activeTab: 7, visibility: 'visible'
+  }
+]
+        var type = req.params.type;
         var clubRef = admin.database().ref();
+        if(type == 1)
+        {
+          var d1 = req.params.date1;
+          var d2 = req.params.date2; 
+          var worksheet = workbook.addWorksheet('Event Details');
 
-        //defining header columns
-        worksheet.columns = [
-            { header: 'Start Date', key: 'sdate', width: 30 },
-            { header: 'End Date', key: 'edate', width: 30 },
-            { header: 'Club Name', key: 'club', width: 40 },
-            { header: 'Event Name', key: 'eventName', width: 40 }
-        ];
-        var eventID;
-        clubRef.child('clubs/' + clubID + '/my_events').on("value", function(snapshot) {
-        eventID = snapshotToArray(snapshot);
-        
-        //iterates through the clubID array and inserts data accordingly into the workbook
-        eventID.forEach(function(element){
-        clubRef.child('events/'+element).on("value", function(snapshot){
-            sdate = snapshot.child('start_date').val();
-            edate = snapshot.child('end_date').val();
-            club = snapshot.child('clubName').val();
-            desc = snapshot.child('desc').val();
-            var t1 = moment(d1, 'DD-MM-YYYY');
-            var t2 = moment(d2, 'DD-MM-YYYY');
-            var t3 = moment(sdate, 'DD-MM-YYYY');
-            var t4 = moment(edate, 'DD-MM-YYYY');
-            
+          //defining header columns
+          worksheet.columns = [
+              { header: 'Start Date', key: 'sdate', width: 30 },
+              { header: 'End Date', key: 'edate', width: 30 },
+              { header: 'Club Name', key: 'club', width: 40 },
+              { header: 'Event Name', key: 'eventName', width: 40 }
+          ];
+          var eventID;
+          clubRef.child('clubs/' + clubID + '/my_events').on("value", function(snapshot) {
+          eventID = snapshotToArray(snapshot);
+          
+          //iterates through the clubID array and inserts data accordingly into the workbook
+          eventID.forEach(function(element){
+            clubRef.child('events/'+element).on("value", function(snapshot){
+              sdate = snapshot.child('start_date').val();
+              edate = snapshot.child('end_date').val();
+              club = snapshot.child('clubName').val();
+              desc = snapshot.child('desc').val();
+              var t1 = moment(d1, 'DD-MM-YYYY');
+              var t2 = moment(d2, 'DD-MM-YYYY');
+              var t3 = moment(sdate, 'DD-MM-YYYY');
+              var t4 = moment(edate, 'DD-MM-YYYY');
+              
 
-            if(moment(t1).isBefore(t3) && moment(t2).isAfter(t4)){
-            console.log(element);
-            console.log(sdate);
-            console.log(edate);
-            console.log(club);
-            console.log(desc);  
-            worksheet.addRow({sdate: sdate, edate: edate, club: club, eventName: desc});    
-          }
-        })
-      })
-        	//Writes the content on an excel sheet and downloads it
-     		workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
-            console.log('file is written');
-            res.download(__dirname + '/eventDetails.xlsx', function(err, result){
-                if(err){
-                	console.log('Error downloading file: ' + err);	
+              if(moment(t1).isBefore(t3) && moment(t2).isAfter(t4)){
+                // console.log(element);
+                // console.log(sdate);
+                // console.log(edate);
+                // console.log(club);
+                // console.log(desc);  
+                worksheet.addRow({sdate: sdate, edate: edate, club: club, eventName: desc});    
+              }
+            })
+          })
+            //Writes the content on an excel sheet and downloads it
+          workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
+              console.log('file is written');
+              res.download(__dirname + '/eventDetails.xlsx', function(err, result){
+                  if(err){
+                    console.log('Error downloading file: ' + err);  
+                  }
+                  else{
+                    console.log('File downloaded successfully');
+                  }
+              });
+          });
+       });
+        }
+        else if(type == 2)
+        {
+          console.log('extract monthly');
+          var eventID;
+          clubRef.child('clubs/' + clubID + '/my_events').on("value", function(snapshot) {
+            eventID = snapshotToArray(snapshot);
+            var eventCount = eventID.length;
+            console.log(eventID.length);
+            var i = 0;
+            eventID.forEach(function(element){
+              clubRef.child('events/'+element).on("value", function(snapshot) {
+                sdate = snapshot.child('start_date').val();
+                edate = snapshot.child('end_date').val();
+                club = snapshot.child('clubName').val();
+                desc = snapshot.child('desc').val();
+                console.log(sdate);
+                console.log(edate);
+                console.log(club);
+                console.log(desc);
+                var t1 = moment(sdate, 'DD-MM-YYYY');
+                var t2 = moment(edate, 'DD-MM-YYYY');
+                var mon = t1.month() + 1;
+                if(workbook.getWorksheet(montht[mon])) {
+                  console.log('true');
+                  worksheet = workbook.getWorksheet(montht[mon]);
                 }
-                else{
-                	console.log('File downloaded successfully');
+                else {
+                  console.log('false');
+                  var worksheet = workbook.addWorksheet(montht[mon]);
+                  // http://localhost:9000/event/generate-sheet/9xdTvUjqtuYI5yYOJ4BbhsPAIyx2/2
                 }
+                worksheet.columns = [
+              { header: 'Start Date', key: 'sdate', width: 30 },
+              { header: 'End Date', key: 'edate', width: 30 },
+              { header: 'Club Name', key: 'club', width: 40 },
+              { header: 'Event Name', key: 'eventName', width: 40 }
+          ];
+                worksheet.addRow({sdate: sdate, edate: edate, club: club, eventName: desc});
+                i+=1;
+                console.log(i);
+                if(i==eventCount)
+              {
+                workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
+              console.log('file is written');
+              res.download(__dirname + '/eventDetails.xlsx', function(err, result){
+                  if(err){
+                    console.log('Error downloading file: ' + err);  
+                  }
+                  else{
+                    console.log('File downloaded successfully');
+                  }
+              });
+          }); 
+              }
+              });
+              
             });
-        });
-     });
+          });
+        }
         
     } catch(err) {
         console.log('Error: ' + err);
