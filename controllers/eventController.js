@@ -1,9 +1,4 @@
 const admin = require('firebase-admin');
-var serviceAccount = require("./../config.json");
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://mit-clubs-management.firebaseio.com"
-});
 
 var ejs = require('ejs');
 var pdf = require('html-pdf');
