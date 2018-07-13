@@ -141,8 +141,6 @@ exports.generate_sheet = function(req, res) {
         {
           var d1 = req.query.from;
           var d2 = req.query.to;
-          console.log(d1);
-          console.log(d2);
           var worksheet = workbook.addWorksheet('Event Details');
 
           worksheet.columns = [
