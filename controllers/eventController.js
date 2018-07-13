@@ -160,7 +160,7 @@ exports.generate_sheet = function(req, res) {
               var t2 = moment(d2, 'DD-MM-YYYY');
               var t3 = moment(sdate, 'DD-MM-YYYY');
               var t4 = moment(edate, 'DD-MM-YYYY');
-              if(moment(t1).isBefore(t3) && moment(t2).isAfter(t4)){
+              if(moment(t1).isSameOrBefore(t3) && moment(t2).isSameOrAfter(t4)){
                 type_event = snapshot.child('type').val();
                 sdate = t3.format('dddd, Do MMMM YYYY');
                 edate = t4.format('dddd, Do MMMM YYYY');
