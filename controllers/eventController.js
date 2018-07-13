@@ -62,11 +62,9 @@ exports.generate_pdf = function(req,res) {
       ad_date: snapshot.val().AD_date,
       so_date: snapshot.val().SO_date,
     }, function(err, result) {
-      // render on success
       if (result) {
          html = result;
       }
-      // render or error
       else {
          res.end('An error occurred');
          console.log(err);
@@ -126,67 +124,84 @@ exports.generate_sheet = function(req, res) {
 
     return returnArr;
     };
-        var montht = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var months = ['January','Feburary','March','April',
+        'May','June','July','August',
+        'September','October','November','December'];
         var clubID = req.query.uid;
+        var type_event;
+        var title;
         var sdate;
         var edate;
-        var club;
-        var desc;
+        var roomlist;
+        var booker_name;
         var workbook = new Excel.Workbook();
-        workbook.views = [
-          {
-            x: 0, y: 0, width: 10000, height: 20000,
-            firstSheet: 0, activeTab: 7, visibility: 'visible'
-          }
-        ]
         var type = req.query.mode;
         var clubRef = admin.database().ref();
         if(type == 'CUSTOM')
         {
           var d1 = req.query.from;
           var d2 = req.query.to;
+          console.log(d1);
+          console.log(d2);
           var worksheet = workbook.addWorksheet('Event Details');
 
-          //defining header columns
           worksheet.columns = [
-              { header: 'Start Date', key: 'sdate', width: 30 },
-              { header: 'End Date', key: 'edate', width: 30 },
-              { header: 'Club Name', key: 'club', width: 40 },
-              { header: 'Event Name', key: 'eventName', width: 40 }
+              { header: 'Type', key: 'type_event', width: 15 },
+              { header: 'Title', key: 'title', width: 25 },
+              { header: 'Start Date', key: 'sdate', width: 25 },
+              { header: 'End Date', key: 'edate', width: 25 },
+              { header: 'Rooms', key: 'roomlist', width: 25 },
+              { header: 'Booked By', key: 'booker_name', width: 25 }
           ];
           var eventID;
           clubRef.child('clubs/' + clubID + '/my_events').once("value", function(snapshot) {
           eventID = snapshotToArray(snapshot);
-          
-          //iterates through the clubID array and inserts data accordingly into the workbook
+          var eventCount = eventID.length;
+          var i = 0;
           eventID.forEach(function(element){
+            //http://localhost:9000/event/generate-sheet?uid=9xdTvUjqtuYI5yYOJ4BbhsPAIyx2&mode=CUSTOM&from=12-07-2018&to=12-12-2018
             clubRef.child('events/'+element).once("value", function(snapshot){
+              sdate = snapshot.child('start_date').val();
+              edate = snapshot.child('end_date').val();
               var t1 = moment(d1, 'DD-MM-YYYY');
               var t2 = moment(d2, 'DD-MM-YYYY');
               var t3 = moment(sdate, 'DD-MM-YYYY');
               var t4 = moment(edate, 'DD-MM-YYYY');
-              
               if(moment(t1).isBefore(t3) && moment(t2).isAfter(t4)){
-                sdate = snapshot.child('start_date').val();
-                edate = snapshot.child('end_date').val();
-                club = snapshot.child('clubName').val();
-                desc = snapshot.child('desc').val();
-                worksheet.addRow({sdate: sdate, edate: edate, club: club, eventName: desc});    
+                type_event = snapshot.child('type').val();
+                sdate = t3.format('dddd, Do MMMM YYYY');
+                edate = t4.format('dddd, Do MMMM YYYY');
+                title = snapshot.child('title').val();
+                var rooms = snapshot.child('rooms/').val();
+                roomlist = "";
+                var room_block = ["AB-1","AB-2","NLH","IC","AB-5"];
+                rooms.forEach(function(room){
+                  var block = Math.floor(room/1000) - 1;
+                  var room_no = room%1000;
+                  block = room_block[block];
+                  roomlist+=block + "-" + room_no + ", ";
+                });
+                roomlist = roomlist.replace(/,\s*$/, "");
+                booker_name = snapshot.child('booker_name').val();
+                worksheet.addRow({type_event: type_event, title: title, sdate: sdate,
+                  edate: edate, roomlist: roomlist, booker_name: booker_name});
+              }
+              i+=1;
+              if(i==eventCount) {
+                workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
+                  console.log('file is written');
+                  res.download(__dirname + '/eventDetails.xlsx', function(err, result){
+                    if(err){
+                      console.log('Error downloading file: ' + err);  
+                    }
+                    else{
+                      console.log('File downloaded successfully');
+                    }
+                  });
+                });
               }
             })
           })
-            //Writes the content on an excel sheet and downloads it
-          workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
-              console.log('file is written');
-              res.download(__dirname + '/eventDetails.xlsx', function(err, result){
-                  if(err){
-                    console.log('Error downloading file: ' + err);  
-                  }
-                  else{
-                    console.log('File downloaded successfully');
-                  }
-              });
-          });
        });
         }
         else if(type == 'ALL')
@@ -196,39 +211,46 @@ exports.generate_sheet = function(req, res) {
           clubRef.child('clubs/' + clubID + '/my_events').once("value", function(snapshot) {
             eventID = snapshotToArray(snapshot);
             var eventCount = eventID.length;
-            console.log(eventID.length);
             var i = 0;
             eventID.forEach(function(element){
               clubRef.child('events/'+element).once("value", function(snapshot) {
                 sdate = snapshot.child('start_date').val();
                 edate = snapshot.child('end_date').val();
-                club = snapshot.child('clubName').val();
-                desc = snapshot.child('desc').val();
-                console.log(sdate);
-                console.log(edate);
-                console.log(club);
-                console.log(desc);
                 var t1 = moment(sdate, 'DD-MM-YYYY');
                 var t2 = moment(edate, 'DD-MM-YYYY');
                 var mon = t1.month();
-                if(workbook.getWorksheet(montht[mon])) {
-                  console.log('true');
-                  worksheet = workbook.getWorksheet(montht[mon]);
+                if(workbook.getWorksheet(months[mon])) {
+                  worksheet = workbook.getWorksheet(months[mon]);
                 }
                 else {
-                  console.log('false');
-                  var worksheet = workbook.addWorksheet(montht[mon]);
-                  // http://localhost:9000/event/generate-sheet/9xdTvUjqtuYI5yYOJ4BbhsPAIyx2/2
+                  var worksheet = workbook.addWorksheet(months[mon]);
                 }
                 worksheet.columns = [
-              { header: 'Start Date', key: 'sdate', width: 30 },
-              { header: 'End Date', key: 'edate', width: 30 },
-              { header: 'Club Name', key: 'club', width: 40 },
-              { header: 'Event Name', key: 'eventName', width: 40 }
-          ];
-                worksheet.addRow({sdate: sdate, edate: edate, club: club, eventName: desc});
+                    { header: 'Type', key: 'type_event', width: 15 },
+                    { header: 'Title', key: 'title', width: 25 },
+                    { header: 'Start Date', key: 'sdate', width: 25 },
+                    { header: 'End Date', key: 'edate', width: 25 },
+                    { header: 'Rooms', key: 'roomlist', width: 25 },
+                    { header: 'Booked By', key: 'booker_name', width: 25 }
+                ];
+                type_event = snapshot.child('type').val();
+                sdate = t1.format('dddd, Do MMMM YYYY');
+                edate = t2.format('dddd, Do MMMM YYYY');
+                title = snapshot.child('title').val();
+                var rooms = snapshot.child('rooms/').val();
+                roomlist = "";
+                var room_block = ["AB-1","AB-2","NLH","IC","AB-5"];
+                rooms.forEach(function(room){
+                  var block = Math.floor(room/1000) - 1;
+                  var room_no = room%1000;
+                  block = room_block[block];
+                  roomlist+=block + "-" + room_no + ", ";
+                });
+                roomlist = roomlist.replace(/,\s*$/, "");
+                booker_name = snapshot.child('booker_name').val();
+                worksheet.addRow({type_event: type_event, title: title, sdate: sdate,
+                  edate: edate, roomlist: roomlist, booker_name: booker_name});
                 i+=1;
-                console.log(i);
                 if(i==eventCount)
               {
                 workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
