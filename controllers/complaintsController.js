@@ -16,8 +16,27 @@ exports.generate_sheet = function(req, res) {
 	    });
 	    return returnArr;
 	 	};
+
+	 	function downloadSheet() {
+	 		workbook.xlsx.writeFile(__dirname + '/Complaints.xlsx').then(function() {
+	              	console.log('file is written');
+                  	res.download(__dirname + '/Complaints.xlsx', function(err, result){
+	                    if(err){
+	                    	console.log('Error downloading file: ' + err);  
+	                    }
+		                else{
+			              	console.log('File downloaded successfully');
+		                }
+	              	});
+                });
+	 	}
 		
 		var months = ['January','Feburary','March','April', 'May','June','July','August', 'September','October','November','December'];
+		wsCols = [
+				{header: 'Subject', key: 'subject', width: 40},
+				{header: 'Date of complaint', key: 'dated', width: 30},
+				{header: 'Status', key: 'status', width: 20}
+			];
     var type = req.query.mode;
 		var dated;
 		var subject;
@@ -28,11 +47,7 @@ exports.generate_sheet = function(req, res) {
 			var d1 = req.query.from;
 			var d2 = req.query.to;
 			var worksheet = workbook.addWorksheet('Complaints');
-			worksheet.columns = [
-				{header: 'Subject', key: 'subject', width: 40},
-				{header: 'Date of complaint', key: 'dated', width: 30},
-				{header: 'Status', key: 'status', width: 20}
-			];
+			worksheet.columns = wsCols;
 			var complaintID;
 			complaintRef.child('complaints/').once("value", function(snapshot) {
 				complaintID = snapshotToArray(snapshot);
@@ -53,17 +68,7 @@ exports.generate_sheet = function(req, res) {
 						}
 						i+=1;
 							if(i==complaintCount) {
-								workbook.xlsx.writeFile(__dirname + '/Complaints.xlsx').then(function() {
-	              	console.log('file is written');
-	              	res.download(__dirname + '/Complaints.xlsx', function(err, result){
-	                  if(err){
-	                  	console.log('Error downloading file: ' + err);  
-	                  }
-	                  else{
-	                    	console.log('File downloaded successfully');
-	                  }
-	              	});
-	            	});
+								downloadSheet();
 							}
 						});
 					});
@@ -87,11 +92,7 @@ exports.generate_sheet = function(req, res) {
 			                }
 			                else {
 			                 	var worksheet = workbook.addWorksheet(months[mon]);
-			                	worksheet.columns = [
-									{ header: 'Subject', key: 'subject', width: 40},
-									{ header: 'Date of complaint', key: 'dated', width: 30},
-									{ header: 'Status', key: 'status', width: 20}
-								];
+			                	worksheet.columns = wsCols;
 			                }
 			                subject = snapshot.child('subject').val();
 							status = snapshot.child('isResolved').val();
@@ -100,17 +101,7 @@ exports.generate_sheet = function(req, res) {
 							worksheet.addRow({subject: subject, dated: dated, status: status});
 							i+=1;
 							if(i==complaintCount) {
-								workbook.xlsx.writeFile(__dirname + '/Complaints.xlsx').then(function() {
-	              	console.log('file is written');
-                  	res.download(__dirname + '/Complaints.xlsx', function(err, result){
-	                    if(err){
-	                    	console.log('Error downloading file: ' + err);  
-	                    }
-		                else{
-			              	console.log('File downloaded successfully');
-		                }
-	              	});
-                });
+								downloadSheet();
 							}
 						});
 					});
