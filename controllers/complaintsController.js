@@ -19,16 +19,16 @@ exports.generate_sheet = function(req, res) {
 
 	 	function downloadSheet() {
 	 		workbook.xlsx.writeFile(__dirname + '/Complaints.xlsx').then(function() {
-	              	console.log('file is written');
-                  	res.download(__dirname + '/Complaints.xlsx', function(err, result){
-	                    if(err){
-	                    	console.log('Error downloading file: ' + err);  
-	                    }
-		                else{
-			              	console.log('File downloaded successfully');
-		                }
-	              	});
-                });
+		        console.log('file is written');
+	            res.download(__dirname + '/Complaints.xlsx', function(err, result) {
+		            if(err) {
+		               	console.log('Error downloading file: ' + err);  
+		            }
+			        else {
+				       	console.log('File downloaded successfully');
+			        }
+		       	});
+            });
 	 	}
 		
 		var months = ['January','Feburary','March','April', 'May','June','July','August', 'September','October','November','December'];
@@ -37,7 +37,7 @@ exports.generate_sheet = function(req, res) {
 				{header: 'Date of complaint', key: 'dated', width: 30},
 				{header: 'Status', key: 'status', width: 20}
 			];
-    var type = req.query.mode;
+    	var type = req.query.mode;
 		var dated;
 		var subject;
 		var status;

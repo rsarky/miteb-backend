@@ -119,6 +119,27 @@ exports.generate_sheet = function(req, res) {
 
     return returnArr;
     };
+    function downloadSheet() {
+      workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
+        console.log('file is written');
+        res.download(__dirname + '/eventDetails.xlsx', function(err, result){
+          if(err){
+            console.log('Error downloading file: ' + err);  
+          }
+          else{
+            console.log('File downloaded successfully');
+          }
+        });
+      });
+    }
+    wsCols = [
+      { header: 'Type', key: 'type_event', width: 15 },
+      { header: 'Title', key: 'title', width: 25 },
+      { header: 'Start Date', key: 'sdate', width: 25 },
+      { header: 'End Date', key: 'edate', width: 25 },
+      { header: 'Rooms', key: 'roomlist', width: 25 },
+      { header: 'Booked By', key: 'booker_name', width: 25 }
+    ];
         var months = ['January','Feburary','March','April',
         'May','June','July','August',
         'September','October','November','December'];
@@ -138,14 +159,7 @@ exports.generate_sheet = function(req, res) {
           var d2 = req.query.to;
           var worksheet = workbook.addWorksheet('Event Details');
 
-          worksheet.columns = [
-              { header: 'Type', key: 'type_event', width: 15 },
-              { header: 'Title', key: 'title', width: 25 },
-              { header: 'Start Date', key: 'sdate', width: 25 },
-              { header: 'End Date', key: 'edate', width: 25 },
-              { header: 'Rooms', key: 'roomlist', width: 25 },
-              { header: 'Booked By', key: 'booker_name', width: 25 }
-          ];
+          worksheet.columns = wsCols;
           var eventID;
           clubRef.child('clubs/' + clubID + '/my_events').once("value", function(snapshot) {
           eventID = snapshotToArray(snapshot);
@@ -181,17 +195,7 @@ exports.generate_sheet = function(req, res) {
               }
               i+=1;
               if(i==eventCount) {
-                workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
-                  console.log('file is written');
-                  res.download(__dirname + '/eventDetails.xlsx', function(err, result){
-                    if(err){
-                      console.log('Error downloading file: ' + err);  
-                    }
-                    else{
-                      console.log('File downloaded successfully');
-                    }
-                  });
-                });
+                downloadSheet();
               }
             })
           })
@@ -218,14 +222,7 @@ exports.generate_sheet = function(req, res) {
                 else {
                   var worksheet = workbook.addWorksheet(months[mon]);
                 }
-                worksheet.columns = [
-                    { header: 'Type', key: 'type_event', width: 15 },
-                    { header: 'Title', key: 'title', width: 25 },
-                    { header: 'Start Date', key: 'sdate', width: 25 },
-                    { header: 'End Date', key: 'edate', width: 25 },
-                    { header: 'Rooms', key: 'roomlist', width: 25 },
-                    { header: 'Booked By', key: 'booker_name', width: 25 }
-                ];
+                worksheet.columns = wsCols;
                 type_event = snapshot.child('type').val();
                 sdate = t1.format('dddd, Do MMMM YYYY');
                 edate = t2.format('dddd, Do MMMM YYYY');
@@ -244,19 +241,8 @@ exports.generate_sheet = function(req, res) {
                 worksheet.addRow({type_event: type_event, title: title, sdate: sdate,
                   edate: edate, roomlist: roomlist, booker_name: booker_name});
                 i+=1;
-                if(i==eventCount)
-              {
-                workbook.xlsx.writeFile(__dirname + '/eventDetails.xlsx').then(function() {
-              console.log('file is written');
-              res.download(__dirname + '/eventDetails.xlsx', function(err, result){
-                  if(err){
-                    console.log('Error downloading file: ' + err);  
-                  }
-                  else{
-                    console.log('File downloaded successfully');
-                  }
-              });
-          }); 
+                if(i==eventCount) {
+                downloadSheet();
               }
               });
               
