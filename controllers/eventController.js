@@ -105,6 +105,112 @@ exports.generate_pdf = function(req,res) {
   
 };
 
+exports.generate_daily_events = function(req, res) {
+  function snapshotToArray(snapshot) {
+    var returnArr = [];
+
+    snapshot.forEach(function(childSnapshot) {
+      var item = childSnapshot.val();
+      returnArr.push(item);
+    });
+
+    return returnArr;
+  }
+  var date = req.query.date;
+  var filename = `events-${date}.pdf`;
+
+  var eventsRef = admin.database().ref('to-be-held/' + date);
+  var eventRef = admin.database().ref();
+  // console.log(eventsRef);
+  eventsRef.once("value", function(snapshot) {
+    // if(snapshot.val()===null) {
+    //   console.log("No events Booked for this day")
+    // }
+    var html;
+    var eventID = snapshotToArray(snapshot);
+    var eventCount = eventID.length;
+    var i = 0;
+    if(eventCount == 0) {
+      console.log("No events booked for this day");
+    }
+    else {
+      eventarr = [];
+      var roomlist;
+      eventID.forEach(function(element) {
+        eventRef.child('events/' + element).once("value", function(snapshot) {
+          console.log(snapshot.val().clubName);
+          console.log(element);
+          var rooms = snapshot.child('rooms/').val();
+          roomlist = "";
+          var room_block = ["AB-1","AB-2","NLH","IC","AB-5"];
+          rooms.forEach(function(room){
+            var block = Math.floor(room/1000) - 1;
+            var room_no = room%1000;
+            block = room_block[block];
+            roomlist+=block + "-" + room_no + ", ";
+          });
+          roomlist = roomlist.replace(/,\s*$/, "");
+          var eventObj = [];
+          eventObj.push(element);
+          eventObj.push(snapshot.val().clubName);
+          eventObj.push(roomlist);
+          eventarr.push(eventObj);
+          i++;
+          if(i==eventCount) {
+            console.log(eventarr);
+    ejs.renderFile(__dirname + '/dailyeventpdf.ejs', {
+      events: eventarr,
+      date: date
+    }, function(err, result) {
+      if (result) {
+         html = result;
+      }
+      else {
+         res.end('An error occurred');
+         console.log(err);
+      }
+  });
+    var options = {
+      filename: filename,
+      height: "870px",
+      width: "650px",
+      orientation: 'portrait',
+      type: "pdf",
+      timeout: '30000',
+      border: "10",
+    };
+
+  pdf.create(html, options).toFile(function(err, result) {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      config.uploadToS3(filename, (err, downloadURL) => {
+        if(err) {
+          res.status(200).send(err)
+          return
+        }
+        else {
+          admin.database().ref('events').child(eventID + '/receiptURL').set(downloadURL);
+          fs.unlink(filename, (err) => {
+            if (err) throw err;
+            console.log(filename +' was deleted from local server');
+          });
+          res.status(200).send(downloadURL);
+          return;
+        }
+
+      })
+    }
+  });
+          }
+        })
+      })
+    }
+    
+  })
+}
+
 exports.generate_sheet = function(req, res) {
   try {
       function snapshotToArray(snapshot) {
